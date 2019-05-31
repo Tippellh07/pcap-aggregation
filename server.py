@@ -26,17 +26,21 @@ app = flask.Flask(__name__)
 @app.route('/')
 @app.route('/index.html')
 def serve_root():
-    return flask.send_from_directory('.', 'index.html')
+    return flask.send_from_directory('ui', 'index.html')
 
 
 @app.route('/js/<path:path>')
 def serve_js(path):
-    return flask.send_from_directory('js', path)
+    return flask.send_from_directory(
+        os.path.join('ui', 'js'),
+        path)
 
 
 @app.route('/css/<path:path>')
 def serve_css(path):
-    return flask.send_from_directory('css', path)
+    return flask.send_from_directory(
+        os.path.join('ui', 'css'),
+        path)
 
 
 @app.route('/api/aggregate', methods=['POST'])
@@ -63,7 +67,10 @@ def analyse_pcap(filename):
 
     @return A dict of aggregated pcap data.
     """
-    results = {'protocols': {}}
+    results = {
+        'protocols': {},
+        'hosts': set(),
+        'connections': {}}
     try:
         capture = pyshark.FileCapture(filename)
         for packet in capture:
@@ -72,7 +79,22 @@ def analyse_pcap(filename):
                 results['protocols'][protocol] += 1
             else:
                 results['protocols'][protocol] = 1
+
+            # add connections and hosts
+            if hasattr(packet, 'ip'):
+                results['hosts'].add(packet.ip.src_host)
+                results['hosts'].add(packet.ip.dst_host)
+                if packet.ip.src_host not in results['connections']:
+                     results['connections'][packet.ip.src_host] = set()
+                results['connections'][packet.ip.src_host].add(
+                    packet.ip.dst_host)
+
         capture.close()
+
+        # cast connection and host sets to lists to allow json serialisation
+        for key in results['connections'].keys():
+            results['connections'][key] = list(results['connections'][key])
+        results['hosts'] = list(results['hosts'])
     except Exception as e:
         capture.close()
         results =  {'error': 'unable to parse file as pcap'}
