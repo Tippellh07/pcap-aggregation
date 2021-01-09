@@ -3,7 +3,7 @@ Flask==1.0.3
 itsdangerous==1.1.0
 Jinja2==2.10.1
 Logbook==1.4.3
-lxml==4.3.3
+lxml==4.6.2
 MarkupSafe==1.1.1
 py==1.8.0
 pyshark==0.4.2.3
