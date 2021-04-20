@@ -5,6 +5,6 @@ Jinja2==2.10.1
 Logbook==1.4.3
 lxml==4.6.2
 MarkupSafe==1.1.1
-py==1.8.0
+py==1.10.0
 pyshark==0.4.2.3
 Werkzeug==0.15.4
